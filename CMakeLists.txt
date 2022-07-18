@@ -26,6 +26,7 @@ include_directories(Path-Tracer-CPU PUBLIC
     ${SDL2_INCLUDE_DIRS} 
     ${GLM_INCLUDE_DIRS}
     ${imgui_DIR}
+    dependencies
     include)
 
 if (WIN32)
