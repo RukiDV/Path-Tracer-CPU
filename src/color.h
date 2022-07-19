@@ -6,6 +6,8 @@
 class Color {
 public:
     explicit Color(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 1.0f) { rgba = glm::vec4(r, g, b, a); }
+    explicit Color(glm::vec4 color) : rgba(color) {}
+    explicit Color(glm::vec3 color) : rgba(glm::vec4(color, 1.0f)) {}
     glm::vec4 rgba;
 
     uint32_t convert_to_8_bit() {
