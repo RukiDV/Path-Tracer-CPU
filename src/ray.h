@@ -1,12 +1,12 @@
 #pragma once
 
-#include "glm/vec3.hpp"
+#include "glm/glm.hpp"
 
 class Ray {
 
 public: 
     Ray() = default;
-    Ray(const glm::vec3 origin, const glm::vec3 direction) : orig(origin), dir(direction) {}
+    Ray(const glm::vec3 origin, const glm::vec3 direction) : orig(origin), dir(glm::normalize(direction)) {}
 
     glm::vec3 origin() const {
         return orig;

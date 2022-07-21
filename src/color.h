@@ -11,13 +11,13 @@ public:
     glm::vec4 rgba;
 
     uint32_t convert_to_8_bit() {
-        uint32_t converted_color = glm::clamp(static_cast<uint32_t>(255.999 * rgba.a), 0u, 255u);
+        uint32_t converted_color = glm::clamp(static_cast<int32_t>(255.999 * rgba.a), 0, 255);
         converted_color <<= 8;
-        converted_color += glm::clamp(static_cast<uint32_t>(255.999 * rgba.b), 0u, 255u);
+        converted_color += glm::clamp(static_cast<int32_t>(255.999 * rgba.b), 0, 255);
         converted_color <<= 8;
-        converted_color += glm::clamp(static_cast<uint32_t>(255.999 * rgba.g), 0u, 255u);
+        converted_color += glm::clamp(static_cast<int32_t>(255.999 * rgba.g), 0, 255);
         converted_color <<= 8;
-        converted_color += glm::clamp(static_cast<uint32_t>(255.999 * rgba.r), 0u, 255u);
+        converted_color += glm::clamp(static_cast<int32_t>(255.999 * rgba.r), 0, 255);
         return converted_color;
     }
 };
