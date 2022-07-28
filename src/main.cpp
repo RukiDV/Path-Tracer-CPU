@@ -4,34 +4,24 @@
 #include <stdlib.h>
 #include "ray.h"
 #include "color.h"
+#include "hittable.h"
+#include "hittable_list.h"
+#include "math.h"
+#include "sphere.h"
 
 #define CHANNEL_NUM 4
 #define STBI_MSC_SECURE_CRT
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-float hit_sphere(const glm::vec3 center, float radius, const Ray& r) {
-    glm::vec3 oc = r.origin() - center;
-    auto a = dot(r.direction(), r.direction());
-    auto b = 2.0f * dot(oc, r.direction());
-    auto c = dot(oc, oc) - radius * radius; 
-    auto discriminant = b * b - 4 * a * c; 
-    if (discriminant < 0) {
-        return -1.0f;
-    } else {
-        return (-b - sqrt(discriminant))/ (2.0f * a);
+Color ray_color(const Ray& r, const Hittable& world) {
+    hit_record rec;
+    if (world.hit(r, 0, infinity, rec)) { 
+        return Color(0.5f * (rec.normal + glm::vec3(1.0f, 1.0f, 1.0f)));
     }
 
-}
-
-Color ray_color(const Ray& r) {
-    auto t = hit_sphere(glm::vec3(0.0f,0.0f,-1.0f), 0.5f, r);
-       if (t > 0.0f) {
-        glm::vec3 N = glm::normalize(r.at(t) - glm::vec3(0.0f, 0.0f, -1.0f));
-        return Color((N + glm::vec3(1.0f)) * 0.5f);
-       } 
     glm::vec3 unit_direction = glm::normalize(r.direction());
-    t = 0.5f * (unit_direction.y + 1.0f);
+    auto t = 0.5f * (unit_direction.y + 1.0f);
     return Color((1.0f - t) * glm::vec3(1.0f, 1.0f, 1.0f) + t * glm::vec3(0.5f, 0.7f, 1.0f));
 }
 
@@ -41,6 +31,11 @@ int main() {
     const auto aspect_ratio = 16.0f/10.0f;
     const int image_width = 1000;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
+
+    // World
+    Hittable_list world; 
+    world.add(make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f)); 
+    world.add(make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
 
     //Camera
     auto viewport_height = 2.0f;
@@ -62,7 +57,7 @@ int main() {
             float u = float(j) / (image_width - 1);
             float v = float(i) / (image_height - 1);
             Ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
-            Color pixel_color = ray_color(r);
+            Color pixel_color = ray_color(r, world);
             pixels[index++] = pixel_color.convert_to_8_bit();
         }
     }
