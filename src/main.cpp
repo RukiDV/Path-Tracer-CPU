@@ -32,12 +32,12 @@ int main() {
     const auto aspect_ratio = 16.0f/10.0f;
     const int image_width = 1000;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 100;
+    const int samples_per_pixel = 128;
 
     // World
     Hittable_list world; 
-    world.add(make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f)); 
-    world.add(make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
+    world.add(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f)); 
+    world.add(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
 
     //Camera
     Camera cam;
@@ -56,8 +56,9 @@ int main() {
                 
                 Ray r = cam.get_ray(u,v); 
                 pixel_color.rgba += ray_color(r, world).rgba;
-                pixels[index++] = pixel_color.convert_to_8_bit(samples_per_pixel);
-            }  
+            }
+            pixel_color.rgba /= static_cast<float>(samples_per_pixel);
+            pixels[index++] = pixel_color.convert_to_8_bit(); 
         }
     }
 
