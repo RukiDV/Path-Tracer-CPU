@@ -19,13 +19,13 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-Color ray_color(const Ray& r, const Hittable& world, int depth, RandomGenerator& rg) {
+Color ray_color(const Ray& r, const Hittable* world, int depth, RandomGenerator& rg) {
     hit_record rec;
 
     if(depth <= 0) {
         return Color(0.0f, 0.0f, 0.0f);
     }
-    if (world.hit(r, 0.00001, infinity, rec)) { 
+    if (world->hit(r, 0.00001, infinity, rec)) { 
         Ray scattered;
         glm::vec4 attenuation;
         if(rec.mat_ptr->scatter(r, rec, attenuation, scattered, rg)) {
@@ -43,19 +43,21 @@ Color ray_color(const Ray& r, const Hittable& world, int depth, RandomGenerator&
     return Color(1.0f, 1.0f, 1.0f);//(1.0f - t) * glm::vec3(1.0f, 1.0f, 1.0f) + t * glm::vec3(0.5f, 0.7f, 1.0f));
 }
 
-void render_pixel_row(const int image_width, const int image_height, const int samples_per_pixel, const int max_depth, const Hittable& world, Camera cam, int start, int end) {
+void render_pixel_row(const int image_width, const int image_height, const int samples_per_pixel, const int max_depth, const Hittable* world, std::vector<uint32_t>* pixels, const Camera cam, const int start, const int end) {
     RandomGenerator rg;
-    for (int j = 0; j < image_width; ++j) {
-        Color pixel_color(0.0f, 0.0f, 0.0f);
-        for (int k = 0; k < samples_per_pixel; ++k) {
-            float v = float(i + rg.random_num()) / (image_height - 1.0f);
-            float u = float(j + rg.random_num()) / (image_width - 1.0f);
+    for (int i = start; i < end; ++i) {
+        for (int j = 0; j < image_width; ++j) {
+            Color pixel_color(0.0f, 0.0f, 0.0f);
+            for (int k = 0; k < samples_per_pixel; ++k) {
+                float v = float(i + rg.random_num()) / (image_height - 1.0f);
+                float u = float(j + rg.random_num()) / (image_width - 1.0f);
                 
-            Ray r = cam.get_ray(u,v); 
-            pixel_color.rgba += ray_color(r, world, max_depth, rg).rgba;
+                Ray r = cam.get_ray(u,v); 
+                pixel_color.rgba += ray_color(r, world, max_depth, rg).rgba;
+            }
+            pixel_color.rgba /= static_cast<float>(samples_per_pixel);
+            (*pixels)[(image_height - 1 - i) * image_width + j] = pixel_color.convert_to_8_bit();
         }
-        pixel_color.rgba /= static_cast<float>(samples_per_pixel);
-        pixels[((image_height - 1) - i) * image_width + j] = pixel_color.convert_to_8_bit();
     }
 }
 
@@ -67,6 +69,7 @@ int main() {
     const int image_height = static_cast<int>(image_width / aspect_ratio);
     const int samples_per_pixel = 128;
     const int max_depth = 8;
+    const int thread_count = 8;
 
     RandomGenerator rg;
 
@@ -91,16 +94,22 @@ int main() {
 
     //Renderer
     std::vector<uint32_t> pixels(image_width * image_height);
-    std::thread t1 = std::thread(render_pixel_row, );
+    std::vector<std::thread> threads;
 
-    for (int i = image_height - 1.0f; i >= 0; --i) {
- 
+    //TODO vielfaches machen thread 
+    int t_block = image_height / thread_count;
+
+    for (int t = 0; t < thread_count; ++t) {
+        threads.push_back(std::thread(render_pixel_row, image_width, image_height, samples_per_pixel, max_depth, &world, &pixels, cam, t_block * t, t_block * (t + 1)));
+    }
+
+    for (int t = 0; t < thread_count; ++t) {
+        threads[t].join();
     }
 
     int exit_code_img_wr = stbi_write_png("beautiful.png", image_width, image_height, CHANNEL_NUM, reinterpret_cast<uint8_t*>(pixels.data()), image_width * CHANNEL_NUM);
     std::cout << "Writing image: " << exit_code_img_wr << std::endl;
 
-    t1.join();
 
     return 0;
 }
