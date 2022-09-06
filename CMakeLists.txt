@@ -17,8 +17,6 @@ add_executable(Path-Tracer-CPU src/main.cpp ${SOURCE_FILES})
 
 #find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
-find_package(OpenMP REQUIRED)
-target_link_libraries(Path-Tracer-CPU PRIVATE OpenMP::OpenMP_CXX)
 
 #find_library(SDL2_LIB SDL2.lib ${SDL2_DIR}/lib/x64/)
 
